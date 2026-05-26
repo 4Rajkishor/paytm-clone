@@ -1,5 +1,5 @@
 import express from "express";
-import {SigninSchema,SignupSchema} from "@repo/common/schema"
+import {SigninSchema,SignupSchema} from "@repo/common/types"
 import bcrypt from "bcrypt";
 import{prismaClient} from "@repo/db/dbSchema"
 const app= express();
