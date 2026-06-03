@@ -5,6 +5,7 @@ import {SigninSchema,SignupSchema} from "@repo/common/types"
 import bcrypt from "bcrypt";
 import{prismaClient} from "@repo/db/db"
 import { signToken,verifyToken } from "@repo/jwt";
+import { authMiddleware } from "./auth.js";
 const app= express();
 
 app.use(express.json());
@@ -87,6 +88,27 @@ if (!existingUser){
     token:token
     })
 });
+
+app.get("/bulk",authMiddleware,async(req,res)=>{
+    const filter =req.query.filter;
+    if (!filter || typeof filter !== 'string'){
+      return  res.status(403).json({
+            message:'filter is missing'
+        })
+        
+    }
+    const user=await prismaClient.user.findMany({
+        where:{
+            username:{
+                startsWith:filter
+            }
+        }
+    });
+    return res.status(200).json({
+        user:user.map ((u)=>u.username
+     )
+    })
+})
 
 
 app.listen (3005,()=>{
