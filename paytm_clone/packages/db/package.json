@@ -3,13 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "exports": {
-  "./dbSchema": {
-    "import": "./dist/prisma.js",
-    "require": "./dist/prisma.js",
-    "types": "./dist/prisma.d.ts"
-  }
-},
+  "exports":{
+    "./db":"./src/prisma.ts"
+  },
+
   "scripts": {
     "build": "tsc -b"
   },

@@ -2,6 +2,7 @@ import dotenv from "dotenv"
 dotenv.config();
 import jwt from "jsonwebtoken";
 
+
 export function signToken(payload:object){
 
     if (!process.env.JWT_SECRET){
@@ -17,5 +18,5 @@ export function verifyToken(token:string){
         throw new Error("jwt is missing");       
     }
 
-     return jwt.verify(token,process.env.JWT_SECRET)
+     return jwt.verify(token,process.env.JWT_SECRET as string)
 }
