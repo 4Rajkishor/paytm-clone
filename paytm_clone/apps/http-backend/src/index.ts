@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import{prismaClient} from "@repo/db/db"
 import { signToken,verifyToken } from "@repo/jwt";
 import { authMiddleware } from "./auth.js";
+import { userInfo } from "os";
 const app= express();
 
 app.use(express.json());
@@ -24,17 +25,24 @@ app.post("/api/signup",async(req,res)=>{
     const saltPassword=await bcrypt.hash(parshedData.data.password,10);
 
     console.log("received Data");
-     const db= await prismaClient.user.create({
+     const user= await prismaClient.user.create({
         data:{
             username:parshedData.data.username,
             password:saltPassword,
             email:parshedData.data.email
         }
-          }
+          } 
      );
+     
+        const userId = user.id;
 
-   
-
+     await prismaClient.account.create({
+        data:{
+            balance:1+Math.random()*10000,
+            userId: userId
+        }
+     });
+      
      res.status(200).json({
         message:"congratul;ations, you have been signedup successfully"
      })
@@ -52,6 +60,7 @@ app.post("/api/signup",async(req,res)=>{
         error:e
       })
     }
+
 
 });
 
@@ -109,6 +118,52 @@ app.get("/bulk",authMiddleware,async(req,res)=>{
      )
     })
 })
+
+app.get("/api/balanace",authMiddleware,async(req,res)=>{
+    let userid=req.id
+
+   const accountBalance= await prismaClient.account.findUnique ({
+        where:{
+            userId:req.id
+        }
+    });
+    res.status(200).json({
+        Balance:accountBalance?.balance
+    });
+});
+
+app.post("/api/transfer",authMiddleware,async(req,res)=>{
+     const{amount,to}=req.body;
+     try{
+     await prismaClient.$transaction(async (tx)=>{
+        const sender=await tx.account.update({
+            data:{balance:{decrement:amount}},
+            where:{userId:req.id}
+        });
+        if (sender.balance<0){
+            
+              throw new Error ("insufficiaent fund")
+         
+        }
+         await tx.account.update({
+            data:{balance:{increment:amount}},
+            where:{userId:to}
+        })
+
+        res.status(200).json({
+             Message:"payment has been sent successfully"
+        })
+     })
+    }
+    catch(e){
+        res.status(403).json({
+            message:"insufficnet fund",
+            error:e
+        })
+    }
+});
+
+
 
 
 app.listen (3005,()=>{
